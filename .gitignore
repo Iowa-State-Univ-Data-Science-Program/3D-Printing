@@ -1,0 +1,5 @@
+# exclude python libs
+/.venv/
+
+# exclude ide specific dirs
+/.idea/
