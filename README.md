@@ -11,7 +11,7 @@ in the creation of mathematically defined 3d surfaces in a printable format(STL)
 # execute from source root
 pip install -r requirements.txt
 ```
-3. Edit main.py and execute
+3. Edit main.py(not required) and execute
 
 
 ## Notes
