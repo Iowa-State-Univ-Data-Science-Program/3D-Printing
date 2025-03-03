@@ -5,39 +5,10 @@ in the creation of mathematically defined 3d surfaces in a printable format(STL)
 
 
 ## Usage
-1. create a virtual environment with venv
-2. install the python libs:
+1. install libraries `numpy`, `scipy`, `open3d` (tested with python 3.12)
 ```
-# execute from source root
 pip install -r requirements.txt
 ```
-3. Edit main.py(not required) and execute
+2. Create a script like `src/single_sided_ind_normal_normal.py`
 
-
-## Notes
-
-### Implementation order of operations
-1. define bounds
-
-2. define top surface
-3. triangulate top surface
-4. render top surface
-
-5. write mesh to disk
-
-6. define bottom surface 
-7. triangulate bottom surface
-8. render bottom surface
-
-9. generate sidewalls
-10. combine surfaces 
-11. generate mesh
-
-12. Unit Tests
-
-### Libraries
-- scipy
-- numpy
-- openstl
-
-- pymeshlab
+3. Run the script

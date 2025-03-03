@@ -1,7 +1,9 @@
+/out/
+__pycache__
+
 # exclude python libs
 /.venv/
 
 # exclude ide specific dirs
 /.idea/
 /3d-printing.iml
-/out/

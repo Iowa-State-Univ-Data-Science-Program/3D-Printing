@@ -9,6 +9,7 @@ from pathlib import Path
 from mesh import Mesh
 
 if __name__ == "__main__":
+
     # Define a function (X, Z) -> Y: X is width, Z is depth, Y is Height
     def norm(X, Z):
         # define imports for the distribution
