@@ -4,7 +4,7 @@ from scipy.stats import norm
 from mesh import Mesh
 
 if __name__ == '__main__':
-    m = Mesh()
+    m = Mesh(side_length)
 
     n = 50
     mu1, sigma1 = 0, 1

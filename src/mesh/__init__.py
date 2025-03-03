@@ -1,247 +1,215 @@
-# class Printer:
-#     def __init__(self, x, y, z):
-#         self.x = x
-#         self.y = y
-#         self.z = z
-from pathlib import Path
-
 import numpy as np
-import open3d as o3d
 from scipy.spatial import Delaunay
+
+import open3d as o3d
 
 
 class Mesh:
-    def __init__(self):
-        self._top_mesh = None
-        self._bottom_mesh = None
-        self.sidewall_height = None
-        self._resolution = None
-        self._x_min = None
-        self._x_max = None
-        self._y_min = None
-        self._y_max = None
-        self._mesh = None
-        self._bottom_surface = None
-        self._top_surface = None
-        self._x = None
-        self._y = None
-        self._z = None
+    def __init__(self, func, x_min, x_max, z_min, z_max, side_height, n_verts):
+        # function which returns func
+        self.surface_function = func
+        # x domain (width
+        self.x_min = x_min
+        self.x_max = x_max
 
-    def __str__(self):
-        return str({
-            "x": self._x,
-            "y": self._y,
-            "z": self._z,
-            "resolution": self._resolution,
-            "top surface": self._top_surface,
-            "bottom surface": self._bottom_surface,
-        })
+        # z domain( depth
+        self.z_min = z_min
+        self.z_max = z_max
+        self.y_max = side_height
+        self.y_min = 0
+        self.n_verts = n_verts
+        self.SIDE_LAYERS = 5
+
+        self._gen_a()
+        self._gen_b()
+        self._gen_c()
+        self._gen_d()
+        self._gen_e()
+        self._gen_top()
+
+        self.mesh = self.compute()
 
     @property
-    def x(self):
-        return self._x
-
-    @x.setter
-    def x(self, value):
-        # if value < 100:
-        #     raise ValueError("x must be greater than 100mm")
-        # elif value > 250:
-        #     raise ValueError("x must be less than 250mm")
-        # else:
-        self._x = value
-        mid = np.floor(value / 2)
-        self._x_min = -mid
-        self._x_max = mid
+    def length(self):
+        return self._length
 
     @property
-    def y(self):
-        return self._y
-
-    @y.setter
-    def y(self, value):
-        # if value < 100:
-        #     raise ValueError("y must be greater than 100mm")
-        # elif value > 250:
-        #     raise ValueError("y must be less than 250mm")
-        # else:
-        self._y = value
-        mid = np.floor(value / 2)
-        self._y_min = -mid
-        self._y_max = mid
+    def wall_height(self):
+        return self._wall_height
 
     @property
-    def z(self):
-        return self._z
+    def resolution(self):
+        return self._resolution
 
-    @z.setter
-    def z(self, value):
-        if value < 100:
-            raise ValueError("z must be greater than 100mm")
-        elif value > 250:
-            raise ValueError("z must be less than 250mm")
-        else:
-            self._z = value
-
-    @property
-    def top_surface(self):
-        return self._top_surface
-
-    @top_surface.setter
-    def top_surface(self, top_surface):
+    def _gen_a(self):
         """
-        Define a zero-thickness mathematical top surface
+        Generate A side Verts and Tris
         """
-        for coord in top_surface:
-            coord[2] = coord[2] + self.sidewall_height
-        self._top_surface = top_surface
 
-    @property
-    def bottom_surface(self):
-        return self._bottom_surface
+        x = np.linspace(self.x_min, self.x_max, self.n_verts)
+        y = np.linspace(self.y_min, self.y_max, self.SIDE_LAYERS)
 
-    @bottom_surface.setter
-    def bottom_surface(self, bottom_surface):
-        """
-        Define a zero-thickness mathematical top surface
-        """
-        self._bottom_surface = bottom_surface
+        X, Y = np.meshgrid(x, y)
+        Z = np.full(shape=(len(x) * len(y)), fill_value=self.z_max)
+        self.a_verts = np.vstack((X.ravel(), Y.ravel(), Z.ravel())).T
 
-    def _get_corner_verts(self):
-        corners = [
-            (self._x_min, self._y_min),
-            (self._x_min, self._y_max),
-            (self._x_max, self._y_min),
-            (self._x_max, self._y_max),
-        ]
-        top_corners = []
-        for idx, coord in enumerate(self._top_surface):
-            if (coord[0], coord[1]) in corners:
-                # print(coord)
-                top_corners.append(coord)
+        self.a_tris = Delaunay(self.a_verts[:, :2]).simplices
 
-        bottom_corners = []
-        for idx, coord in enumerate(self._bottom_surface):
-            if (coord[0], coord[1]) in corners:
-                # print(coord)
-                bottom_corners.append(coord)
-        corners = np.array(top_corners)
-        corners = np.vstack([np.array(bottom_corners), corners])
-        print(corners.astype(int))
-        return corners
-        # print(top_corners)
-        # print(np.array(bottom_corners) + len(self._top_surface))
+    def _gen_b(self):
+        x = np.linspace(self.x_min, self.x_max, self.n_verts)
+        y = np.linspace(self.y_min, self.y_max, self.SIDE_LAYERS)
 
-    # def generate(self):
-    #
-    #
-    #     self._zeroize()
-    #     verticies = np.vstack([self._bottom_surface, self._top_surface])  # add box and bottom mesh here
-    #     triangles = np.vstack([
-    #         Delaunay(self._bottom_surface[:, :2]).simplices,
-    #         # sidewall_faces,
-    #         Delaunay(self._top_surface[:, :2]).simplices
-    #     ])
-    #     # print(self.top_surface[:,:])
-    #     # print(self.top_surface[:,:2])
-    #
-    #     # verticies = self._top_surface  # add box and bottom mesh here
-    #     # triangles = Delaunay(self._top_surface[:, :2]).simplices
-    #
-    #     self._mesh = o3d.geometry.TriangleMesh()
-    #     self._mesh.vertices = o3d.utility.Vector3dVector(verticies)
-    #     self._mesh.triangles = o3d.utility.Vector3iVector(triangles)
-    #     self._mesh.compute_vertex_normals()
-    #     # self._mesh.compute_triangle_normals()
-    def generate(self):
-        self._zeroize()
-        bottom = self.generate_bottom_surface()
-        top = self.generate_top_surface()
-        self._mesh = bottom + top
+        X, Y = np.meshgrid(x, y)
+        Z = np.full(shape=(len(x) * len(y)), fill_value=self.z_min)
+        self.b_verts = np.vstack((X.ravel(), Y.ravel(), Z.ravel())).T
 
-    def generate_bottom_surface(self):
-        triangles = Delaunay(self._bottom_surface[:, :2]).simplices
-        self._bottom_mesh = o3d.geometry.TriangleMesh()
-        self._bottom_mesh.vertices = o3d.utility.Vector3dVector(self._bottom_surface)
-        self._bottom_mesh.triangles = o3d.utility.Vector3iVector(triangles)
-        self._bottom_mesh.compute_vertex_normals()
+        simplices = Delaunay(self.b_verts[:, :2]).simplices
 
-        return self._bottom_mesh
+        flipped_simplices = []
+        for tri in simplices:
+            flipped_simplices.append(np.flip(tri))
+        self.b_tris = flipped_simplices
 
-    def generate_top_surface(self):
-        triangles = Delaunay(self._top_surface[:, :2]).simplices
-        self._top_mesh = o3d.geometry.TriangleMesh()
-        self._top_mesh.vertices = o3d.utility.Vector3dVector(self._top_surface)
-        self._top_mesh.triangles = o3d.utility.Vector3iVector(triangles)
-        self._top_mesh.compute_vertex_normals()
-        return self._top_mesh
+    def _gen_c(self):
+        z = np.linspace(self.z_min, self.z_max, self.n_verts)
+        y = np.linspace(self.y_min, self.y_max, self.SIDE_LAYERS)
 
-    def generate_sidewalls(self):
-        sidewall_faces = np.array([
-            [0, 99, 10099],
-            [0, 10099, 10000],
-            [99, 9999, 19999],
-            [99, 19999, 10099],
-            [9999, 9900, 19900],
-            [9999, 19900, 19999],
-            [9900, 0, 10000],
-            [9900, 10000, 19900],
-        ])
-        corners = self._get_corner_verts()
-        print(corners)
+        Z, Y = np.meshgrid(z, y)
+        X = np.full(shape=(len(z) * len(y)), fill_value=self.x_min)
+        self.c_verts = np.vstack((X.ravel(), Y.ravel(), Z.ravel())).T
 
-    def _zeroize(self, ):
-        for vert in self._top_surface:
-            if vert[0] == self._x_min or vert[0] == self._x_max:
-                vert[2] = self.sidewall_height
-            elif vert[1] == self._y_min or vert[1] == self._y_max:
-                vert[2] = self.sidewall_height
-        for vert in self._bottom_surface:
-            if vert[0] == self._x_min or vert[0] == self._x_max:
-                vert[2] = 0
-            elif vert[1] == self._y_min or vert[1] == self._y_max:
-                vert[2] = 0
+        simplices = Delaunay(self.c_verts[:, [1, 2]]).simplices
 
-    def render(self):
-        o3d.visualization.draw_geometries([self._bottom_mesh + self._top_mesh])
+        flipped_simplices = []
+        for tri in simplices:
+            flipped_simplices.append(np.flip(tri))
+        self.c_tris = flipped_simplices
+
+    def _gen_d(self):
+        z = np.linspace(self.z_min, self.z_max, self.n_verts)
+        y = np.linspace(self.y_min, self.y_max, self.SIDE_LAYERS)
+
+        Z, Y = np.meshgrid(z, y)
+        X = np.full(shape=(len(z) * len(y)), fill_value=self.x_max)
+        self.d_verts = np.vstack((X.ravel(), Y.ravel(), Z.ravel())).T
+
+        self.d_tris = Delaunay(self.d_verts[:, [1, 2]]).simplices
+
+    def _gen_e(self):
+        x = np.linspace(self.x_min, self.x_max, self.n_verts)
+        z = np.linspace(self.z_min, self.z_max, self.n_verts)
+        X, Z = np.meshgrid(x, z)
+        Y = np.zeros(len(x) * len(z))
+        self.e_verts = np.vstack((X.ravel(), Y.ravel(), Z.ravel())).T
+
+        self.e_tris = Delaunay(self.e_verts[:, [0, 2]]).simplices
+
+    def _gen_top(self):
+        x = np.linspace(self.x_min, self.x_max, self.n_verts)
+        z = np.linspace(self.z_min, self.z_max, self.n_verts)
+        X, Z = np.meshgrid(x, z)
+        Y = self.surface_function(X, Z)
+
+        top_verts = np.vstack((X.ravel(), Y.ravel(), Z.ravel())).T
+
+        # zeroize edges
+        for coord in top_verts:
+            if coord[0] == x_min or coord[0] == x_max or coord[2] == z_min or coord[2] == z_max:
+                coord[1] = 0
+
+        top_verts[:, 1] = top_verts[:, 1] + side_height
+        self.top_verts = top_verts
+
+        simplices = []
+        for tri in Delaunay(self.top_verts[:, [0, 2]]).simplices:
+            simplices.append(np.flip(tri))
+        self.top_tris = simplices
+
+    def _validate_mesh(self):
+        pass
+
+    def compute(self):
+        self.a_mesh = o3d.geometry.TriangleMesh()
+        self.a_mesh.vertices = o3d.utility.Vector3dVector(self.a_verts)
+        self.a_mesh.triangles = o3d.utility.Vector3iVector(self.a_tris)
+        self.a_mesh.compute_vertex_normals()
+
+        self.b_mesh = o3d.geometry.TriangleMesh()
+        self.b_mesh.vertices = o3d.utility.Vector3dVector(self.b_verts)
+        self.b_mesh.triangles = o3d.utility.Vector3iVector(self.b_tris)
+        self.b_mesh.compute_vertex_normals()
+
+        self.c_mesh = o3d.geometry.TriangleMesh()
+        self.c_mesh.vertices = o3d.utility.Vector3dVector(self.c_verts)
+        self.c_mesh.triangles = o3d.utility.Vector3iVector(self.c_tris)
+        self.c_mesh.compute_vertex_normals()
+
+        self.d_mesh = o3d.geometry.TriangleMesh()
+        self.d_mesh.vertices = o3d.utility.Vector3dVector(self.d_verts)
+        self.d_mesh.triangles = o3d.utility.Vector3iVector(self.d_tris)
+        self.d_mesh.compute_vertex_normals()
+
+        self.e_mesh = o3d.geometry.TriangleMesh()
+        self.e_mesh.vertices = o3d.utility.Vector3dVector(self.e_verts)
+        self.e_mesh.triangles = o3d.utility.Vector3iVector(self.e_tris)
+        self.e_mesh.compute_vertex_normals()
+
+        self.top_mesh = o3d.geometry.TriangleMesh()
+        self.top_mesh.vertices = o3d.utility.Vector3dVector(self.top_verts)
+        self.top_mesh.triangles = o3d.utility.Vector3iVector(self.top_tris)
+        self.top_mesh.compute_vertex_normals()
+
+    def render_pcd(self):
+        meshes = [self.a_mesh, self.b_mesh, self.c_mesh, self.d_mesh, self.e_mesh, self.top_mesh]
+        center = o3d.geometry.PointCloud()
+        center.points = o3d.utility.Vector3dVector(np.array([[0, 0, 0]]))
+        pcds = []
+        pcds.append(center)
+        for mesh in meshes:
+            pcd = o3d.geometry.PointCloud()
+            pcd.points = mesh.vertices
+            pcds.append(pcd)
+        o3d.visualization.draw_geometries(pcds)
+
+    def render_mesh(self):
+        meshes = [self.a_mesh, self.b_mesh, self.c_mesh, self.d_mesh, self.e_mesh, self.top_mesh]
+        o3d.visualization.draw_geometries(meshes)
+
 
     def validate(self):
-        print({
-            "is_edge_manifold": self._mesh.is_edge_manifold(),
-            "is_vertex_manifold": self._mesh.is_vertex_manifold(),
-            "is_self_intersecting": self._mesh.is_self_intersecting(),
-            "is_watertight": self._mesh.is_watertight(),
-            "is_orientable": self._mesh.is_orientable(),
-        })
+        pass
 
-    def get_top_surface_specs(self):
-        """
-        Get the top surface specifications
-        """
+    def to_stl(self):
         pass
 
 
+# instantiate obj
+# set length, wall_height, resolution
+# create a function like norm()
+# func must d
 
-    def write_mesh(self, path):
-        """
-        Write the mesh to disk as an STL
-        """
-        path = Path(path)
-        o3d.io.write_triangle_mesh(path, self._mesh, print_progress=True)
+if __name__ == "__main__":
+    def norm(X, Z):
+        from scipy.stats import norm
+        mu = 0
+        sigma = 1
+        scale_factor = 10
+        return norm.pdf(X, mu, sigma) * norm.pdf(Z, mu, sigma) * scale_factor
 
-    def get_bottom_surface_specs(self):
-        """
-        Get the bottom surface specifications
-        """
-        pass
 
-    def generate_print_instructions(self):
-        """
-        Verify that the mesh can be printed at 100% scale on Bambu X1C
-        """
-        pass
+    sigma = 1
+    side_length = 5 * sigma
+    side_height = side_length / 20
+    # define number of verts per side
+    n_verts = 20
 
-    def simplify(self):
-        """
-        Return a copy of the mesh object with a reduced number of faces
-        """
-        pass
+    x_max = side_length / 2
+    x_min = -x_max
+    z_max = side_length / 2
+    z_min = -z_max
+    y_max = side_height
+    y_min = 0
+
+    mesh = Mesh(norm, x_min, x_max, z_min, z_max, side_height, n_verts)
+    mesh.render_pcd()
+    mesh.render_mesh()
