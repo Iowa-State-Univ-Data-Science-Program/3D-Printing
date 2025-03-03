@@ -211,5 +211,15 @@ if __name__ == "__main__":
     y_min = 0
 
     mesh = Mesh(norm, x_min, x_max, z_min, z_max, side_height, n_verts)
-    mesh.render_pcd()
+    # mesh.render_pcd()
+    mesh.render_mesh()
+
+    n_verts = 40
+    mesh = Mesh(norm, x_min, x_max, z_min, z_max, side_height, n_verts)
+    # mesh.render_pcd()
+    mesh.render_mesh()
+
+    n_verts = 100
+    mesh = Mesh(norm, x_min, x_max, z_min, z_max, side_height, n_verts)
+    # mesh.render_pcd()
     mesh.render_mesh()
