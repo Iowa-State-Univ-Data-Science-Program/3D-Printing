@@ -27,7 +27,7 @@ class Mesh:
         self._gen_e()
         self._gen_top()
 
-        self.mesh = self.compute()
+        self.compute()
 
     @property
     def length(self):
@@ -159,6 +159,8 @@ class Mesh:
         self.top_mesh.triangles = o3d.utility.Vector3iVector(self.top_tris)
         self.top_mesh.compute_vertex_normals()
 
+        self.mesh = self.a_mesh + self.b_mesh + self.c_mesh + self.d_mesh + self.e_mesh + self.top_mesh
+
     def render_pcd(self):
         meshes = [self.a_mesh, self.b_mesh, self.c_mesh, self.d_mesh, self.e_mesh, self.top_mesh]
         center = o3d.geometry.PointCloud()
@@ -173,13 +175,17 @@ class Mesh:
 
     def render_mesh(self):
         meshes = [self.a_mesh, self.b_mesh, self.c_mesh, self.d_mesh, self.e_mesh, self.top_mesh]
-        o3d.visualization.draw_geometries(meshes)
+        # o3d.visualization.draw_geometries(meshes)
+        o3d.visualization.draw_geometries([self.mesh])
 
 
     def validate(self):
         pass
 
-    def to_stl(self):
+    def to_stl(self, path):
+        if path.split(".")[-1] != "stl":
+            return ValueError("File must end with .stl")
+        o3d.io.write_triangle_mesh(path, self.mesh, print_progress=True)
         pass
 
 
@@ -201,7 +207,6 @@ if __name__ == "__main__":
     side_length = 5 * sigma
     side_height = side_length / 20
     # define number of verts per side
-    n_verts = 20
 
     x_max = side_length / 2
     x_min = -x_max
@@ -210,16 +215,18 @@ if __name__ == "__main__":
     y_max = side_height
     y_min = 0
 
-    mesh = Mesh(norm, x_min, x_max, z_min, z_max, side_height, n_verts)
+    # n_verts = 10
+    # mesh = Mesh(norm, x_min, x_max, z_min, z_max, side_height, n_verts)
     # mesh.render_pcd()
-    mesh.render_mesh()
+    # mesh.render_mesh()
 
-    n_verts = 40
-    mesh = Mesh(norm, x_min, x_max, z_min, z_max, side_height, n_verts)
+    # n_verts = 40
+    # mesh = Mesh(norm, x_min, x_max, z_min, z_max, side_height, n_verts)
     # mesh.render_pcd()
-    mesh.render_mesh()
+    # mesh.render_mesh()
 
-    n_verts = 100
+    n_verts = 1000
     mesh = Mesh(norm, x_min, x_max, z_min, z_max, side_height, n_verts)
     # mesh.render_pcd()
     mesh.render_mesh()
+    mesh.to_stl('..\\..\\out\\normal.stl')
