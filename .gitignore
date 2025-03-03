@@ -4,3 +4,4 @@
 # exclude ide specific dirs
 /.idea/
 /3d-printing.iml
+/out/

@@ -1,7 +1,6 @@
 import numpy as np
-from scipy.spatial import Delaunay
-
 import open3d as o3d
+from scipy.spatial import Delaunay
 
 
 class Mesh:
@@ -27,23 +26,24 @@ class Mesh:
         self._gen_e()
         self._gen_top()
 
-        self.compute()
+        self.meshify()
 
-    @property
-    def length(self):
-        return self._length
-
-    @property
-    def wall_height(self):
-        return self._wall_height
-
-    @property
-    def resolution(self):
-        return self._resolution
+    #
+    # @property
+    # def length(self):
+    #     return self._length
+    #
+    # @property
+    # def wall_height(self):
+    #     return self._wall_height
+    #
+    # @property
+    # def resolution(self):
+    #     return self._resolution
 
     def _gen_a(self):
         """
-        Generate A side Verts and Tris
+        Generate A side verts and Tris
         """
 
         x = np.linspace(self.x_min, self.x_max, self.n_verts)
@@ -56,6 +56,9 @@ class Mesh:
         self.a_tris = Delaunay(self.a_verts[:, :2]).simplices
 
     def _gen_b(self):
+        """
+        Generate B side verts and Tris
+        """
         x = np.linspace(self.x_min, self.x_max, self.n_verts)
         y = np.linspace(self.y_min, self.y_max, self.SIDE_LAYERS)
 
@@ -71,6 +74,9 @@ class Mesh:
         self.b_tris = flipped_simplices
 
     def _gen_c(self):
+        """
+        Generate C side verts and Tris
+        """
         z = np.linspace(self.z_min, self.z_max, self.n_verts)
         y = np.linspace(self.y_min, self.y_max, self.SIDE_LAYERS)
 
@@ -86,6 +92,9 @@ class Mesh:
         self.c_tris = flipped_simplices
 
     def _gen_d(self):
+        """
+        Generate D side verts and Tris
+        """
         z = np.linspace(self.z_min, self.z_max, self.n_verts)
         y = np.linspace(self.y_min, self.y_max, self.SIDE_LAYERS)
 
@@ -96,6 +105,9 @@ class Mesh:
         self.d_tris = Delaunay(self.d_verts[:, [1, 2]]).simplices
 
     def _gen_e(self):
+        """
+        Generate E side verts and Tris
+        """
         x = np.linspace(self.x_min, self.x_max, self.n_verts)
         z = np.linspace(self.z_min, self.z_max, self.n_verts)
         X, Z = np.meshgrid(x, z)
@@ -105,6 +117,9 @@ class Mesh:
         self.e_tris = Delaunay(self.e_verts[:, [0, 2]]).simplices
 
     def _gen_top(self):
+        """
+        Generate top surface
+        """
         x = np.linspace(self.x_min, self.x_max, self.n_verts)
         z = np.linspace(self.z_min, self.z_max, self.n_verts)
         X, Z = np.meshgrid(x, z)
@@ -114,10 +129,10 @@ class Mesh:
 
         # zeroize edges
         for coord in top_verts:
-            if coord[0] == x_min or coord[0] == x_max or coord[2] == z_min or coord[2] == z_max:
+            if coord[0] == self.x_min or coord[0] == self.x_max or coord[2] == self.z_min or coord[2] == self.z_max:
                 coord[1] = 0
 
-        top_verts[:, 1] = top_verts[:, 1] + side_height
+        top_verts[:, 1] = top_verts[:, 1] + self.y_max
         self.top_verts = top_verts
 
         simplices = []
@@ -125,10 +140,10 @@ class Mesh:
             simplices.append(np.flip(tri))
         self.top_tris = simplices
 
-    def _validate_mesh(self):
-        pass
-
-    def compute(self):
+    def meshify(self):
+        """
+        Build triangle mesh objects
+        """
         self.a_mesh = o3d.geometry.TriangleMesh()
         self.a_mesh.vertices = o3d.utility.Vector3dVector(self.a_verts)
         self.a_mesh.triangles = o3d.utility.Vector3iVector(self.a_tris)
@@ -162,6 +177,9 @@ class Mesh:
         self.mesh = self.a_mesh + self.b_mesh + self.c_mesh + self.d_mesh + self.e_mesh + self.top_mesh
 
     def render_pcd(self):
+        """
+        Render a point cloud of the complete mesh
+        """
         meshes = [self.a_mesh, self.b_mesh, self.c_mesh, self.d_mesh, self.e_mesh, self.top_mesh]
         center = o3d.geometry.PointCloud()
         center.points = o3d.utility.Vector3dVector(np.array([[0, 0, 0]]))
@@ -174,59 +192,19 @@ class Mesh:
         o3d.visualization.draw_geometries(pcds)
 
     def render_mesh(self):
-        meshes = [self.a_mesh, self.b_mesh, self.c_mesh, self.d_mesh, self.e_mesh, self.top_mesh]
+        """
+        Render the complete mesh
+        """
+        # meshes = [self.a_mesh, self.b_mesh, self.c_mesh, self.d_mesh, self.e_mesh, self.top_mesh]
         # o3d.visualization.draw_geometries(meshes)
         o3d.visualization.draw_geometries([self.mesh])
 
-
-    def validate(self):
-        pass
-
     def to_stl(self, path):
-        if path.split(".")[-1] != "stl":
+        """
+        Save the Mesh as STL
+        :param path:
+        :return:
+        """
+        if path.suffix != ".stl":
             return ValueError("File must end with .stl")
         o3d.io.write_triangle_mesh(path, self.mesh, print_progress=True)
-        pass
-
-
-# instantiate obj
-# set length, wall_height, resolution
-# create a function like norm()
-# func must d
-
-if __name__ == "__main__":
-    def norm(X, Z):
-        from scipy.stats import norm
-        mu = 0
-        sigma = 1
-        scale_factor = 10
-        return norm.pdf(X, mu, sigma) * norm.pdf(Z, mu, sigma) * scale_factor
-
-
-    sigma = 1
-    side_length = 5 * sigma
-    side_height = side_length / 20
-    # define number of verts per side
-
-    x_max = side_length / 2
-    x_min = -x_max
-    z_max = side_length / 2
-    z_min = -z_max
-    y_max = side_height
-    y_min = 0
-
-    # n_verts = 10
-    # mesh = Mesh(norm, x_min, x_max, z_min, z_max, side_height, n_verts)
-    # mesh.render_pcd()
-    # mesh.render_mesh()
-
-    # n_verts = 40
-    # mesh = Mesh(norm, x_min, x_max, z_min, z_max, side_height, n_verts)
-    # mesh.render_pcd()
-    # mesh.render_mesh()
-
-    n_verts = 1000
-    mesh = Mesh(norm, x_min, x_max, z_min, z_max, side_height, n_verts)
-    # mesh.render_pcd()
-    mesh.render_mesh()
-    mesh.to_stl('..\\..\\out\\normal.stl')
