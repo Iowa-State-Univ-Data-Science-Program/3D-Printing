@@ -22,7 +22,6 @@ if __name__ == "__main__":
 
         return norm.pdf(X, mu, sigma) * norm.pdf(Z, mu, sigma) * scale_factor
 
-
     # Parameters
     mu = 0
     std_dev = 1
@@ -42,9 +41,9 @@ if __name__ == "__main__":
     y_max = side_height
     y_min = 0
 
-    n_verts = 10  # Higher the number, the smoother the surface is.
+    n_verts = 100  # Higher the number, the smoother the surface is.
 
-    mesh = Mesh(norm, x_min, x_max, z_min, z_max, side_height, n_verts)
+    mesh = Mesh(x_min, x_max, z_min, z_max, n_verts, norm)
     mesh.render_pcd()
     mesh.render_mesh()
 
