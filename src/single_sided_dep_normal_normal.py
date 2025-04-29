@@ -1,6 +1,5 @@
-# TOP SURFACE: independent bivariate normal
-# mean=0
-# std_dev=1
+# TOP SURFACE: Dependant bivariate normal
+
 # X domain=[-std_dev/2, std_dev/2]
 # Y domain=[-std_dev/2, std_dev/2]
 
@@ -10,17 +9,21 @@ from mesh import Mesh
 
 if __name__ == "__main__":
 
-    # Define a function (X, Z) -> Y: X is width, Z is depth, Y is Height
     def norm(X, Z):
         # define imports for the distribution
-        from scipy.stats import norm
+        from scipy.stats import multivariate_normal
+        import numpy as np
 
         # Define the distribution parameters
-        mu = 0
-        sigma = 1
-        scale_factor = 10  # TODO figure out why this is needed: without it the distribution is barely visible
+        mu_x = 1
+        var_x = 0.5
+        mu_z = 0
+        var_z = 1
 
-        return norm.pdf(X, mu, sigma) * norm.pdf(Z, mu, sigma) * scale_factor
+        pos = np.empty(X.shape + (2,))
+        pos[:, :, 0] = X; pos[:, :, 1] = Z
+        rv = multivariate_normal([mu_x, mu_z], [[var_x, 0], [0, var_z]])
+        return rv.pdf(pos) * 10
 
     # Parameters
     mu = 0
@@ -47,4 +50,4 @@ if __name__ == "__main__":
     mesh.render_pcd()
     mesh.render_mesh()
 
-    mesh.to_stl(Path(f'../out/single_sided_ind_normal_normal.stl'))
+    mesh.to_stl(Path(f'../out/single_sided_dep_normal_normal.stl'))
