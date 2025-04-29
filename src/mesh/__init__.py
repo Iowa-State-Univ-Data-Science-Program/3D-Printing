@@ -195,6 +195,10 @@ class Mesh:
         o3d.visualization.draw_geometries(pcds)
 
     def _compute_vertical_offset(self):
+        bottom_diff = np.zeros_like(self.bottom_verts[:, 1]) - self.bottom_verts[:, 1]
+        bottom_offset = np.max(bottom_diff)
+        self.bottom_verts[:, 1] += bottom_offset
+
         diff = self.bottom_verts[:, 1] - self.top_verts[:, 1]
         offset = np.max(diff) + self.min_offset
         self.y_max = offset
