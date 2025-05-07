@@ -8,6 +8,11 @@ in the creation of mathematically defined 3d surfaces in a printable format(STL)
 A package to generate 3D printable mathematical surfaces using numpy/scipy
 Please see `scripts/basic_normal.py` for a simple example.
 
+> ![NOTE]
+> `scripts/basic_normal.py` uses a relative import since the 
+> package is not currently published on pypi. If you copy the script to your own project,
+> make sure to change the import to match the installation instructions below.
+
 ### Installation From Source
 1. Clone the git repository
 ```bash
