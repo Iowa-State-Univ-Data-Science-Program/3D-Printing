@@ -2,7 +2,7 @@ from typing import Union
 
 import numpy as np
 import open3d as o3d
-from narwhals import Boolean
+import open3d.cpu.pybind.geometry
 from scipy.spatial import Delaunay
 
 
@@ -55,7 +55,7 @@ class Surface:
         self.pcd = o3d.geometry.PointCloud()
         self.pcd.points = o3d.utility.Vector3dVector(self.vertices)
 
-    def scale(self, factor: Union[int, float], reset: Boolean = False) -> None:
+    def scale(self, factor: Union[int, float], reset: bool = False) -> None:
         """
         Scale the vertical axis. If reset is True, set the scale back to 1 before applying the new scale factor
         :param factor:
@@ -94,7 +94,6 @@ class TableTopModel:
     """
 
     def __init__(self, top_surface: Surface, bottom_surface: Surface, min_offset: int = 0.2):
-        self.mesh = None
         self.pcd = None
         self.min_offset = min_offset
         self.top_surface = top_surface
@@ -109,6 +108,16 @@ class TableTopModel:
 
         self.SIDE_LAYERS = 5
         self._construct_model()
+
+    def get_mesh(self):
+        mesh = o3d.geometry.TriangleMesh()
+        all_meshes = [self.top_surface.mesh, self.bottom_surface.mesh, self.front['mesh'], self.back['mesh'],
+                self.right['mesh'], self.left['mesh']]
+
+        for m in all_meshes:
+            mesh += m
+
+        return mesh
 
     def _validate_surface_domains(self):
         """
@@ -155,7 +164,6 @@ class TableTopModel:
         self.back = self._gen_back()
         self.right = self._gen_right()
         self.left = self._gen_left()
-        pass
 
     def _gen_front(self):
         """
@@ -273,4 +281,52 @@ class TableTopModel:
 
 
 class STLWriter:
-    pass
+    def __init__(self, write_ascii: bool = False, compressed: bool = True, print_progress: bool = False,
+                 write_vertex_normals: bool = True, write_vertex_colors: bool = True, write_vertex_uvs: bool = True):
+        """
+        Constructor for STLWriter.
+
+        :param write_ascii: If True, the STL file will be written in ASCII format. Default is False (binary format).
+        :param compressed: If True, the STL file will be compressed. Default is False.
+        :param print_progress: If True, print progress during the save process. Default is False.
+        :param write_vertex_normals: If True, write vertex normals to the STL file. Default is True.
+        :param write_vertex_colors: If True, write vertex colors to the STL file. Default is False.
+        :param write_vertex_uvs: If True, write vertex UVs to the STL file. Default is False.
+        """
+        self.write_ascii = write_ascii
+        self.compressed = compressed
+        self.print_progress = print_progress
+        self.write_vertex_normals = write_vertex_normals
+        self.write_vertex_colors = write_vertex_colors
+        self.write_vertex_uvs = write_vertex_uvs
+
+    def save(self, mesh: o3d.geometry.TriangleMesh, file_path: str) -> None:
+        """
+        Save an Open3D TriangleMesh object as an STL file.
+
+        :param mesh: The Open3D TriangleMesh object to save.
+        :param file_path: The path to save the STL file, with .stl extension.
+        :return: None
+        """
+
+        if not file_path.endswith(".stl"):
+            raise ValueError("File path must have a .stl extension.")
+
+        # Save the Open3D mesh as an STL file with the specified options
+        try:
+            success = o3d.io.write_triangle_mesh(
+                filename=file_path,
+                mesh=mesh,
+                write_ascii=self.write_ascii,
+                compressed=self.compressed,
+                write_vertex_normals=self.write_vertex_normals,
+                write_vertex_colors=self.write_vertex_colors,
+                write_triangle_uvs=self.write_vertex_uvs,
+                print_progress=self.print_progress,
+            )
+            if success:
+                print(f"Mesh successfully saved to {file_path}")
+            else:
+                raise RuntimeError("Failed to save the mesh. The operation was not successful.")
+        except Exception as e:
+            raise RuntimeError(f"Failed to save the mesh: {e}")
