@@ -6,6 +6,7 @@ in the creation of mathematically defined 3d surfaces in a printable format(STL)
 
 ## math_surfaces
 A package to generate 3D printable mathematical surfaces using numpy/scipy
+Please see `scripts/basic_normal.py` for a simple example.
 
 ### Installation From Source
 1. Clone the git repository
