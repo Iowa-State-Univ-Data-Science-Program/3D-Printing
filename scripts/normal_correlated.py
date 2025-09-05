@@ -19,10 +19,10 @@ def norm(X, Z):
     sigma = 1
     rho = 0.9
     bn = multivariate_normal(
-        np.array([mu, mu]), 
-        np.array([[sigma, rho], [rho, sigma]]))
+        mean = np.array([mu, mu]), 
+        cov = np.array([[sigma, rho], [rho, sigma]]))
 
-    return bn.pdf([X, Z])
+    return bn.pdf(np.dstack((X, Z)))
 
 
 def flat(X, Z):
