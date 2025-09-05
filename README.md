@@ -24,10 +24,6 @@ git clone --depth 1 https://github.com/Iowa-State-Univ-Data-Science-Program/3D-P
 ```
 pip install .
 ```
-1. Import in your code
-```python
-from math_surfaces import *
-```
 
 ### Development
 This project uses [uv](https://docs.astral.sh/uv/) for dependency and build management. 
@@ -41,3 +37,13 @@ All UV features including venv management and publishing to pypi(not yet impleme
 > [!IMPORTANT]
 > REMEMBER to increment the version number in `pyproject.toml` after making changes.
 > pip uses the `project.version` parameter to decide whether or not to update a package.
+
+### Usage
+
+To use the math_surfaces package,
+
+1. Activate your virtual environment.
+1. Import the math_surfaces package:
+```python
+from math_surfaces import *
+```
