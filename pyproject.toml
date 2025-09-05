@@ -1,17 +1,18 @@
 [project]
 name = "math_surfaces"
-version = "0.0.01"
+version = "0.0.02"
 description = "A package to generate 3D printable mathematical surfaces"
 readme = "README.md"
 authors = [
     { name = "Dhruv Dole", email = "dsdole@iastate.edu" } #TODO update this after I graduate
 ]
-requires-python = ">=3.12"
+requires-python = ">=3.12,<3.13" # open3d not available for python 3.13 yet
 dependencies = [
     "numpy>=2.2.5",
     "open3d>=0.19.0",
     "scipy>=1.15.2",
 ]
+
 packages = ["math_surfaces"]
 
 [project.scripts]

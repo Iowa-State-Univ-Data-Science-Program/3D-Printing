@@ -14,21 +14,17 @@ Please see `scripts/basic_normal.py` for a simple example.
 > make sure to change the import to match the installation instructions below.
 
 ### Installation From Source
+
 1. Clone the git repository
 ```bash
 git clone --depth 1 https://github.com/Iowa-State-Univ-Data-Science-Program/3D-Printing.git math-surfaces
 ```
-2. Activate your python environment(venv, conda, etc)
-3. Navigate to the cloned git repository
-```bash
-cd math-surfaces
-```
-4. Install the Package
+1. Activate your python environment(venv, conda, etc)
+1. Install the Package
 ```
 pip install .
 ```
-
-5. Import in your code
+1. Import in your code
 ```python
 from math_surfaces import *
 ```
