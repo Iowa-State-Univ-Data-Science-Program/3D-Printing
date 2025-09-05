@@ -6,7 +6,7 @@ Date: 2025/05/07
 Description: An example of how to generate a basic TableTopModel with a normal-normal on top, and a flat bottom.
 """
 
-from src.math_surfaces import *
+from math_surfaces import *
 
 
 def norm(X, Z):
