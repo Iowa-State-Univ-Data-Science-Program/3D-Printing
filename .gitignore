@@ -15,3 +15,5 @@ dist/
 .Rhistory
 *.Rproj
 
+# Ignore stl files
+*.stl
