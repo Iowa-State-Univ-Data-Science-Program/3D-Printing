@@ -4,7 +4,7 @@ version = "0.0.02"
 description = "A package to generate 3D printable mathematical surfaces"
 readme = "README.md"
 authors = [
-    { name = "Dhruv Dole", email = "dsdole@iastate.edu" } #TODO update this after I graduate
+    { name = "Dhruv Dole", email = "dhruv@ddole.net" }
 ]
 requires-python = ">=3.12,<3.13" # open3d not available for python 3.13 yet
 dependencies = [
